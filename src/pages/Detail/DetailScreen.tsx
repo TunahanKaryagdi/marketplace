@@ -1,43 +1,73 @@
-import React, { useEffect, useState } from "react";
-import { Image, SafeAreaView, Text, View } from "react-native";
-import styles from "./Detail.style";
-import { getProduct, getProductList } from "../../api/Product/product";
-import { ProductDto } from "../../api/Product/product.dto";
+import React from 'react';
+import {ActivityIndicator, Image, Text, View} from 'react-native';
+import {StyleSheet, Dimensions} from 'react-native';
+import {Product} from '../../api/Product/product';
+import useFetch from '../../hooks/useFetch/useFetch';
+import {Constants} from '../../constants';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../../../App';
 
-const DetailScreen = () =>{
+type DetailProps = NativeStackScreenProps<RootStackParamList, 'Detail'>;
 
-    const[product,setProducts] = useState<ProductDto | null>(null);
-    const[error,setError] = useState("");
-    const[loading,setLoading] = useState(false);
+const DetailScreen = ({navigation, route}: DetailProps) => {
+  const id = route.params.id;
+  const [data, loading, error] = useFetch(`${Constants.BASE_URL}/${id}`);
 
-    useEffect(()=>{
-        getProductFromApi();
-    },[])
-
-    const getProductFromApi = async () => {
-        setLoading(true);
-        const product : ProductDto  | null = await getProduct(1);
-        product != null ? setProducts(product) : setError("an error occured");            
-        setLoading(false);
-    }
-
-    return(
-        <>
-            {loading ? <Text>Loading</Text> : <></>}
-            {error.length!=0 ? <Text>{error}</Text> : <></>}
-            {product != null  ?  
-            <View style={styles.container}>
-                <Image style={styles.image } source={{uri: product?.image}}/>
-                <Text style={styles.title}>{product?.title}</Text>
-                <Text style={styles.desc}>{product?.description}</Text>
-                <Text style={styles.price}>{product?.price}</Text>
-            </View> :
-         <></>
-          }
-
-        </>
-
+  const isProductDto = (data: BaseResponse | null): data is Product => {
+    return (
+      data != null &&
+      data &&
+      typeof data === 'object' &&
+      'title' in data &&
+      'description' in data &&
+      'price' in data
     );
-}
+  };
+
+  if (error != null) {
+    return <Text>{error.message}</Text>;
+  }
+
+  if (loading) {
+    return <ActivityIndicator size={'large'} />;
+  }
+
+  return (
+    <>
+      {isProductDto(data) ? (
+        <View style={styles.container}>
+          <Image style={styles.image} source={{uri: data.image}} />
+          <Text style={styles.title}>{data.title}</Text>
+          <Text style={styles.desc}>{data.description}</Text>
+          <Text style={styles.price}>{data.price}</Text>
+        </View>
+      ) : (
+        <></>
+      )}
+    </>
+  );
+};
+
+const deviceSize = Dimensions.get('window');
+
+const styles = StyleSheet.create({
+  container: {},
+  image: {
+    height: deviceSize.height * (1 / 3),
+    resizeMode: 'contain',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  desc: {
+    fontSize: 18,
+  },
+  price: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'right',
+  },
+});
 
 export default DetailScreen;

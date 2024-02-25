@@ -1,50 +1,48 @@
+import {SafeAreaView, FlatList, Text, ActivityIndicator} from 'react-native';
+import React from 'react';
+import {Product} from '../../api/Product/product';
+import ProductCard from '../../components/ProductCard/ProductCard';
+import useFetch from '../../hooks/useFetch/useFetch';
+import {Constants} from '../../constants';
+import {StyleSheet} from 'react-native';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../../../App';
 
+type ProductProps = NativeStackScreenProps<RootStackParamList, 'Product'>;
 
-import {  SafeAreaView,FlatList, Text,  } from "react-native";
-import React, { useEffect, useState } from "react";
-import { getProductList } from "../../api/Product/product"; 
-import { ProductDto } from "../../api/Product/product.dto";
-import ProductCard from "../../components/ProductCard/ProductCard";
+const ProductScreen = ({navigation}: ProductProps) => {
+  const [data, loading, error] = useFetch(Constants.BASE_URL);
 
+  const renderItem = ({item}: {item: Product}) => (
+    <ProductCard
+      onPress={id => navigation.navigate('Detail', {id: id})}
+      product={item}
+    />
+  );
 
-const ProductScreen = () =>{
+  if (error != null) {
+    return <Text>{error.message}</Text>;
+  }
 
-    const[products,setProducts] = useState<ProductDto[]>();
-    const[error,setError] = useState("");
-    const[loading,setLoading] = useState(false);
+  if (loading) {
+    return <ActivityIndicator size={'large'} />;
+  }
 
-
-
-    useEffect(()=>{
-        getProducts();
-    },[])
-
-    const getProducts = async () => {
-        setLoading(true);
-        const productList : ProductDto[]  | null = await getProductList();
-        productList != null ? setProducts(productList) : setError("an error occured");            
-        setLoading(false);
-    }
-
-    const renderItem = ({ item }: { item: ProductDto }) => (
-        <ProductCard
-            onPress={() => console.log("tıklandı")} 
-            product={item}
+  return (
+    <SafeAreaView>
+      {Array.isArray(data) ? (
+        <FlatList
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
         />
-    );
+      ) : (
+        <></>
+      )}
+    </SafeAreaView>
+  );
+};
 
-    return (
-        <SafeAreaView>
-            {loading ? <Text>Loading</Text> : <></>}
-            {error.length!=0 ? <Text>{error}</Text> : <></>}
-            <FlatList
-                data={products}
-                renderItem={renderItem}
-                keyExtractor={item => item.id.toString()} 
-            />
-        </SafeAreaView>
-    );
-}
-
+const styles = StyleSheet.create({});
 
 export default ProductScreen;

@@ -1,47 +1,26 @@
-import axios from "axios";
-import { ProductDto } from "./product.dto";
-import { Constants } from "../../constants";
+export class Product implements BaseResponse {
+  id: number;
+  price: string;
+  title: string;
+  category: string;
+  description: string;
+  image: string;
 
-
-
-export const getProductList = async () : Promise<ProductDto[] | null> =>{
-    try {
-        const response = await axios.get(Constants.BASE_URL);
-        const productsData : any[] = response.data;
-        const products: ProductDto[] = productsData.map((product: any) => {
-            return new ProductDto(
-                product.id,
-                product.price,
-                product.title,
-                product.category,
-                product.description,
-                product.image
-            );
-        });
-        return products;
-    } catch (error) {
-        return null;
-    }
+  constructor(
+    id: number,
+    price: string,
+    title: string,
+    category: string,
+    description: string,
+    image: string,
+  ) {
+    this.id = id;
+    this.price = price;
+    this.title = title;
+    this.category = category;
+    this.description = description;
+    this.image = image;
+  }
 }
 
-
-
-export const getProduct = async (id: number) : Promise<ProductDto | null> =>{
-    try {
-        const response = await axios.get(`${Constants.BASE_URL}/${id}`);
-        const productData = response.data;
-        const product: ProductDto = new ProductDto(
-            productData.id,
-            productData.price,
-            productData.title,
-            productData.category,
-            productData.description,
-            productData.image
-        );
-        return product;
-    } catch (error) {
-        return null;
-    }
-}
-
-
+type ProductsDto = Product[];
